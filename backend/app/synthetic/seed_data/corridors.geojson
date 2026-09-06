@@ -1,0 +1,99 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "section_id": "SEC-NDLS-CNB",
+        "zone": "NCR",
+        "division": "PRYJ",
+        "start_station": "NDLS",
+        "end_station": "CNB"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [77.2197, 28.6143],
+          [77.6732, 28.4523],
+          [78.0776, 27.8821],
+          [80.3319, 26.4499]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "section_id": "SEC-CNB-PRYJ",
+        "zone": "NCR",
+        "division": "PRYJ",
+        "start_station": "CNB",
+        "end_station": "PRYJ"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [80.3319, 26.4499],
+          [80.8322, 25.9221],
+          [81.8344, 25.4358]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "section_id": "SEC-BCT-PUNE",
+        "zone": "CR",
+        "division": "BB",
+        "start_station": "BCT",
+        "end_station": "PUNE"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [72.8205, 18.9696],
+          [73.0158, 19.0330],
+          [73.4070, 18.7557],
+          [73.8567, 18.5204]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "section_id": "SEC-HWH-ASN",
+        "zone": "ER",
+        "division": "HWH",
+        "start_station": "HWH",
+        "end_station": "ASN"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [88.3426, 22.5839],
+          [88.0825, 22.8963],
+          [87.3119, 23.5204],
+          [86.9839, 23.6889]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "section_id": "SEC-SBC-MAS",
+        "zone": "SWR",
+        "division": "SBC",
+        "start_station": "SBC",
+        "end_station": "MAS"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [77.5700, 12.9780],
+          [78.1300, 12.9800],
+          [79.1300, 12.9200],
+          [80.2700, 13.0800]
+        ]
+      }
+    }
+  ]
+}

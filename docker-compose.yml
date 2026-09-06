@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: corridorops_postgres
+    environment:
+      POSTGRES_USER: corridor_user
+      POSTGRES_PASSWORD: corridor_password
+      POSTGRES_DB: corridorops_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U corridor_user -d corridorops_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: corridorops_backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://corridor_user:corridor_password@postgres:5432/corridorops_db
+      SECRET_KEY: corridorops-secret-key-super-secure-sih-26027
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: corridorops_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
