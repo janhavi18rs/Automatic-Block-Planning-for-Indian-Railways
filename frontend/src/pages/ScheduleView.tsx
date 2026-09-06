@@ -3,7 +3,7 @@ import { apiFetch } from '../api/client';
 import { GanttTimeline, ScheduleItem } from '../components/GanttTimeline';
 import { useOpsStore } from '../stores/opsStore';
 import { DIVISIONS } from '../constants/divisions';
-import { Calendar, Cpu, Layers, Play, CheckCircle, Activity, Sparkles } from 'lucide-react';
+import { Calendar, Cpu, Layers, Play, Activity, Sparkles } from 'lucide-react';
 
 export const ScheduleView: React.FC = () => {
   const { horizon, division } = useOpsStore();
@@ -87,48 +87,45 @@ export const ScheduleView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header & Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-100 flex items-center space-x-2">
-            <Calendar className="w-6 h-6 text-stage-amber" />
-            <span>Dual-Horizon Block Scheduling Matrix</span>
+          <h1 className="text-lg sm:text-xl font-bold text-slate-100 flex items-center space-x-2">
+            <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-stage-amber shrink-0" />
+            <span>Dual-Horizon Block Schedule Matrix</span>
           </h1>
-          <p className="text-xs text-slate-400 font-mono">
+          <p className="text-[11px] sm:text-xs text-slate-400 font-mono">
             Division: <span className="text-cyan-400 font-bold">{activeDiv.name} ({activeDiv.railway})</span> | Horizon: <span className="text-amber-400 font-bold">{horizon === 'monthly' ? '30-Day Strategic' : '7-Day Tactical'}</span>
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center space-x-3">
-          {/* Purple Button */}
+        {/* Action Buttons (Responsive Wrap on Mobile) */}
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={handleRunCPSAT}
             disabled={isSolving}
-            className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 active:scale-95 text-white text-xs font-bold transition-all flex items-center space-x-2 shadow-lg shadow-purple-600/30 cursor-pointer border border-purple-400/40"
+            className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center space-x-1.5 shadow-lg shadow-purple-600/30 cursor-pointer border border-purple-400/40"
           >
-            <Cpu className={`w-4 h-4 ${isSolving ? 'animate-spin' : ''}`} />
-            <span>{isSolving ? 'Solving CP-SAT...' : 'Run CP-SAT Solver'}</span>
+            <Cpu className={`w-3.5 h-3.5 ${isSolving ? 'animate-spin' : ''}`} />
+            <span>{isSolving ? 'Solving...' : 'Run CP-SAT Solver'}</span>
           </button>
 
-          {/* Orange Button */}
           <button
             onClick={handleShadowBlock}
             disabled={isShadowing}
-            className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 active:scale-95 text-white text-xs font-bold transition-all flex items-center space-x-2 shadow-lg shadow-amber-600/30 cursor-pointer border border-amber-400/40"
+            className="flex-1 sm:flex-initial px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center space-x-1.5 shadow-lg shadow-amber-600/30 cursor-pointer border border-amber-400/40"
           >
-            <Layers className={`w-4 h-4 ${isShadowing ? 'animate-spin' : ''}`} />
-            <span>{isShadowing ? 'Merging...' : 'Apply Shadow Blocking'}</span>
+            <Layers className={`w-3.5 h-3.5 ${isShadowing ? 'animate-spin' : ''}`} />
+            <span>{isShadowing ? 'Merging...' : 'Shadow Blocking'}</span>
           </button>
 
-          {/* Teal Button */}
           <button
             onClick={handleWhatIfSimulation}
             disabled={isSimulating}
-            className="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 active:scale-95 text-white text-xs font-bold transition-all flex items-center space-x-2 shadow-lg shadow-teal-600/30 cursor-pointer border border-teal-400/40"
+            className="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center space-x-1.5 shadow-lg shadow-teal-600/30 cursor-pointer border border-teal-400/40"
           >
-            <Play className={`w-4 h-4 ${isSimulating ? 'animate-spin' : ''}`} />
+            <Play className={`w-3.5 h-3.5 ${isSimulating ? 'animate-spin' : ''}`} />
             <span>{isSimulating ? 'Simulating...' : 'What-If Delay Simulator'}</span>
           </button>
         </div>
@@ -137,7 +134,7 @@ export const ScheduleView: React.FC = () => {
       {/* Action Banners */}
       {actionSuccess && (
         <div
-          className={`p-4 rounded-xl border font-mono text-xs flex items-center space-x-3 shadow-lg transition-all animate-fadeIn ${
+          className={`p-3 sm:p-4 rounded-xl border font-mono text-xs flex items-center space-x-3 shadow-lg transition-all ${
             actionSuccess.type === 'purple'
               ? 'bg-purple-950/60 border-purple-500/50 text-purple-200'
               : 'bg-amber-950/60 border-amber-500/50 text-amber-200'
@@ -150,7 +147,7 @@ export const ScheduleView: React.FC = () => {
 
       {/* Main Gantt Component */}
       {loading ? (
-        <div className="h-80 bg-slate-900 rounded-xl border border-slate-800 animate-pulse flex items-center justify-center text-slate-500 font-mono">
+        <div className="h-64 sm:h-80 bg-slate-900 rounded-xl border border-slate-800 animate-pulse flex items-center justify-center text-slate-500 font-mono text-xs sm:text-sm">
           Loading Schedule Matrix...
         </div>
       ) : (
@@ -167,14 +164,14 @@ export const ScheduleView: React.FC = () => {
 
       {/* What-If Simulation Result Modal */}
       {simulationResult && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0f172a] border border-slate-700 rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-[#0f172a] border border-slate-700 rounded-xl p-4 sm:p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-                <Activity className="w-5 h-5 text-stage-teal" />
-                <span>Monte Carlo What-If Delay Risk Results</span>
+              <h3 className="text-sm sm:text-base font-bold text-slate-100 flex items-center space-x-2">
+                <Activity className="w-5 h-5 text-stage-teal shrink-0" />
+                <span>Monte Carlo What-If Delay Risk</span>
               </h3>
-              <button onClick={() => setSimulationResult(null)} className="text-slate-400 hover:text-slate-200">
+              <button onClick={() => setSimulationResult(null)} className="text-slate-400 hover:text-slate-200 p-1">
                 ✕
               </button>
             </div>
@@ -183,19 +180,19 @@ export const ScheduleView: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-slate-900 p-3 rounded-lg border border-slate-800">
                   <div className="text-slate-400 font-mono">Risk Level</div>
-                  <div className="text-lg font-bold font-mono text-emerald-400 uppercase">
+                  <div className="text-base sm:text-lg font-bold font-mono text-emerald-400 uppercase">
                     {simulationResult.risk_level}
                   </div>
                 </div>
                 <div className="bg-slate-900 p-3 rounded-lg border border-slate-800">
                   <div className="text-slate-400 font-mono">P95 Delay Risk</div>
-                  <div className="text-lg font-bold font-mono text-amber-400">
+                  <div className="text-base sm:text-lg font-bold font-mono text-amber-400">
                     {simulationResult.p95_delay_minutes} min
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-900 p-4 rounded-lg border border-slate-800 space-y-1">
+              <div className="bg-slate-900 p-3 sm:p-4 rounded-lg border border-slate-800 space-y-1">
                 <div className="font-mono font-bold text-slate-300">Recommended Action:</div>
                 <div className="text-slate-400 font-sans leading-relaxed">
                   {simulationResult.recommended_adjustment}
@@ -206,7 +203,7 @@ export const ScheduleView: React.FC = () => {
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setSimulationResult(null)}
-                className="px-4 py-2 bg-slate-800 text-slate-200 font-semibold rounded-lg hover:bg-slate-700 text-xs"
+                className="w-full sm:w-auto px-4 py-2 bg-slate-800 text-slate-200 font-semibold rounded-lg hover:bg-slate-700 text-xs"
               >
                 Dismiss Analysis
               </button>

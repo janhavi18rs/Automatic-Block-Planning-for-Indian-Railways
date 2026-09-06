@@ -41,22 +41,22 @@ export const Analytics: React.FC = () => {
   };
 
   const chartData = varianceData.map((d, i) => ({
-    name: `Slot #${d.schedule_id || i + 1}`,
+    name: `#${d.schedule_id || i + 1}`,
     Planned: d.planned_duration_min,
     Actual: d.actual_duration_min,
     RecoveryScore: d.speed_recovery_score,
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-100 flex items-center space-x-2">
-            <BarChart3 className="w-6 h-6 text-stage-teal" />
-            <span>Closed-Loop Variance Analytics & ML Feedback</span>
+          <h1 className="text-lg sm:text-xl font-bold text-slate-100 flex items-center space-x-2">
+            <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-stage-teal shrink-0" />
+            <span>Closed-Loop Variance Analytics</span>
           </h1>
-          <p className="text-xs text-slate-400 font-mono">
+          <p className="text-[11px] sm:text-xs text-slate-400 font-mono">
             Tracks planned vs actual block durations and retrains the GradientBoosting criticality model over time.
           </p>
         </div>
@@ -64,68 +64,69 @@ export const Analytics: React.FC = () => {
         <button
           onClick={handleTriggerRetrain}
           disabled={isRetraining}
-          className="px-4 py-2 rounded-lg bg-stage-purple text-white text-xs font-semibold hover:bg-purple-600 flex items-center space-x-2 shadow-lg shadow-purple-500/20"
+          className="self-start sm:self-auto px-3.5 py-2 rounded-lg bg-stage-purple text-white text-xs font-semibold hover:bg-purple-600 flex items-center space-x-2 shadow-lg shadow-purple-500/20"
         >
-          <Cpu className={`w-4 h-4 ${isRetraining ? 'animate-spin' : ''}`} />
-          <span>{isRetraining ? 'Retraining ML Model...' : 'Trigger Model Retrain'}</span>
+          <Cpu className={`w-3.5 h-3.5 ${isRetraining ? 'animate-spin' : ''}`} />
+          <span>{isRetraining ? 'Retraining...' : 'Trigger Model Retrain'}</span>
         </button>
       </div>
 
       {/* Retrain Result Card */}
       {retrainResult && (
-        <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl space-y-2">
+        <div className="p-3 sm:p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl space-y-2">
           <div className="flex items-center space-x-2 text-purple-300 font-mono font-bold text-xs">
-            <CheckCircle className="w-4 h-4 text-purple-400" />
+            <CheckCircle className="w-4 h-4 text-purple-400 shrink-0" />
             <span>GradientBoostingRegressor Retrained Successfully!</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono text-slate-300 pt-1">
-            <div>Sample Count: <strong className="text-white">{retrainResult.sample_count}</strong></div>
-            <div>Previous R²: <strong className="text-amber-400">{retrainResult.previous_r2}</strong></div>
-            <div>New R² Score: <strong className="text-emerald-400">{retrainResult.new_r2}</strong></div>
-            <div>New MAE Error: <strong className="text-cyan-400">{retrainResult.new_mae}</strong></div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono text-slate-300 pt-1">
+            <div>Sample Count: <strong className="text-white block sm:inline">{retrainResult.sample_count}</strong></div>
+            <div>Previous R²: <strong className="text-amber-400 block sm:inline">{retrainResult.previous_r2}</strong></div>
+            <div>New R² Score: <strong className="text-emerald-400 block sm:inline">{retrainResult.new_r2}</strong></div>
+            <div>New MAE Error: <strong className="text-cyan-400 block sm:inline">{retrainResult.new_mae}</strong></div>
           </div>
         </div>
       )}
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Planned vs Actual Duration Bar Chart */}
-        <div className="bg-[#0f172a] p-5 rounded-xl border border-slate-800 shadow-2xl space-y-3">
+        <div className="bg-[#0f172a] p-4 sm:p-5 rounded-xl border border-slate-800 shadow-2xl space-y-3">
           <h2 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
-            <BarChart3 className="w-4 h-4 text-stage-blue" />
-            <span>Planned vs Actual Maintenance Duration (Minutes)</span>
+            <BarChart3 className="w-4 h-4 text-stage-blue shrink-0" />
+            <span>Planned vs Actual Maintenance Duration (Min)</span>
           </h2>
 
-          <div className="h-64 pt-2">
+          <div className="h-56 sm:h-72 pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <ReBarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
-                <YAxis stroke="#94a3b8" fontSize={10} />
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '11px' }} />
-                <Legend wrapperStyle={{ fontSize: '11px' }} />
-                <Bar dataKey="Planned" fill="#2563eb" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Actual" fill="#ea580c" radius={[4, 4, 0, 0]} />
+              <ReBarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
+                <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 10 }} />
+                <YAxis stroke="#94a3b8" tick={{ fontSize: 10 }} />
+                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '12px' }} />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                <Bar dataKey="Planned" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Actual" fill="#a855f7" radius={[4, 4, 0, 0]} />
               </ReBarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Speed Recovery Score Trend Line */}
-        <div className="bg-[#0f172a] p-5 rounded-xl border border-slate-800 shadow-2xl space-y-3">
+        {/* Speed Restriction Recovery Curve */}
+        <div className="bg-[#0f172a] p-4 sm:p-5 rounded-xl border border-slate-800 shadow-2xl space-y-3">
           <h2 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
-            <TrendingUp className="w-4 h-4 text-stage-teal" />
-            <span>Speed Recovery Score Trend (%)</span>
+            <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Post-Block Speed Recovery Score (%)</span>
           </h2>
 
-          <div className="h-64 pt-2">
+          <div className="h-56 sm:h-72 pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
-                <YAxis stroke="#94a3b8" fontSize={10} domain={[40, 100]} />
-                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '11px' }} />
-                <Line type="monotone" dataKey="RecoveryScore" stroke="#0d9488" strokeWidth={3} dot={{ fill: '#38bdf8' }} />
+              <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} />
+                <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 10 }} />
+                <YAxis domain={[0, 100]} stroke="#94a3b8" tick={{ fontSize: 10 }} />
+                <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '12px' }} />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
+                <Line type="monotone" dataKey="RecoveryScore" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
