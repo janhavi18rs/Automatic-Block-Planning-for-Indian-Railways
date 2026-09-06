@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuthStore } from './stores/authStore';
 import { ControlRoomLayout } from './layouts/ControlRoomLayout';
 import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
 import { Dashboard } from './pages/Dashboard';
 import { CorridorMap } from './pages/CorridorMap';
 import { ScheduleView } from './pages/ScheduleView';
@@ -26,6 +27,7 @@ export const App: React.FC = () => {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
         {/* Protected routes inside ControlRoomLayout */}
         <Route
