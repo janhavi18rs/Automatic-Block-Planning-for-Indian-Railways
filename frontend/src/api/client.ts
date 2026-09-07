@@ -184,6 +184,37 @@ function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {})
   }
 
   if (endpoint.includes('/schedule/slots/') && endpoint.includes('/override')) {
+    const parts = endpoint.split('/');
+    const slotId = parseInt(parts[parts.indexOf('slots') + 1], 10);
+    let bodyData: any = {};
+    try { bodyData = JSON.parse((options.body as string) || '{}'); } catch (e) {}
+
+    let found = false;
+    mockStore.schedules = mockStore.schedules.map((s) => {
+      if (s.id === slotId) {
+        found = true;
+        return {
+          ...s,
+          planned_start: bodyData.new_start || s.planned_start,
+          planned_end: bodyData.new_end || s.planned_end,
+          status: 'optimized_overridden'
+        };
+      }
+      return s;
+    });
+
+    if (!found) {
+      mockStore.schedules.push({
+        id: isNaN(slotId) ? 22 : slotId,
+        horizon_type: 'weekly',
+        section_id: 'SEC-HWH-ASN',
+        planned_start: bodyData.new_start || '2026-09-29T14:30:00',
+        planned_end: bodyData.new_end || '2026-09-29T17:30:00',
+        departments: ['engineering', 'signal_telecom', 'traction'],
+        status: 'shadow_blocked'
+      });
+    }
+
     return {
       data: { status: 'success', message: 'Slot override saved successfully' } as any,
       meta: { status: 'mock_fallback' }
@@ -239,16 +270,29 @@ function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {})
     if (endpoint.split('/').length > 2 && !endpoint.endsWith('/track-sections')) {
       const parts = endpoint.split('/');
       const secId = parts[parts.length - 1];
+
+      const sectionMap: Record<string, any> = {
+        'SEC-NDLS-CNB': { zone: 'NCR', division: 'PRYJ', start: 'NDLS', end: 'CNB', score: 78.0, depts: ['engineering', 'signal_telecom', 'electrical'] },
+        'SEC-CNB-PRYJ': { zone: 'NCR', division: 'PRYJ', start: 'CNB', end: 'PRYJ', score: 45.0, depts: ['engineering', 'signal_telecom'] },
+        'SEC-BCT-PUNE': { zone: 'CR', division: 'BB', start: 'BCT', end: 'PUNE', score: 88.0, depts: ['engineering', 'electrical'] },
+        'SEC-HWH-ASN': { zone: 'ER', division: 'HWH', start: 'HWH', end: 'ASN', score: 32.0, depts: ['signal_telecom'] },
+        'SEC-SBC-MYS': { zone: 'SWR', division: 'SBC', start: 'SBC', end: 'MYS', score: 55.0, depts: ['engineering'] },
+        'SEC-ALD-DDU': { zone: 'NCR', division: 'PRYJ', start: 'ALD', end: 'DDU', score: 64.0, depts: ['signal_telecom', 'electrical'] },
+        'SEC-DDU-GAYA': { zone: 'ECR', division: 'DDU', start: 'DDU', end: 'GAYA', score: 59.8, depts: ['engineering'] },
+      };
+
+      const info = sectionMap[secId] || { zone: 'NCR', division: 'PRYJ', start: 'NDLS', end: 'CNB', score: 45.0, depts: ['engineering'] };
+
       return {
         data: {
           id: secId,
           section_id: secId,
-          zone: 'NCR',
-          division: 'PRYJ',
-          start_station: 'NDLS',
-          end_station: 'CNB',
+          zone: info.zone,
+          division: info.division,
+          start_station: info.start,
+          end_station: info.end,
           active_events: [
-            { id: 201, score: 88.5, status: 'Active', departments: ['TMS', 'SMMS'] }
+            { id: 201, score: info.score, status: 'synthesized', departments: info.depts }
           ]
         } as any,
         meta: { status: 'mock_fallback' }
@@ -257,7 +301,7 @@ function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {})
     return {
       data: [
         { section_id: 'SEC-NDLS-CNB', name: 'New Delhi - Kanpur Central', zone: 'NCR', division: 'PRYJ' },
-        { section_id: 'SEC-CNB-ALD', name: 'Kanpur Central - Prayagraj Jn', zone: 'NCR', division: 'PRYJ' }
+        { section_id: 'SEC-CNB-PRYJ', name: 'Kanpur Central - Prayagraj Jn', zone: 'NCR', division: 'PRYJ' }
       ] as any,
       meta: { status: 'mock_fallback' }
     };
@@ -266,15 +310,16 @@ function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {})
   if (endpoint.includes('/scoring/criticality/')) {
     const parts = endpoint.split('/');
     const evId = parts[parts.length - 1];
+
     return {
       data: {
         event_id: evId,
-        explanation: 'High criticality due to track geometry defect on high-speed NDLS-CNB corridor during peak Rajdhani window.',
+        explanation: 'Calibrated criticality score reflecting section traffic density, track defect severity, and multi-department synergy.',
         feature_breakdown: {
-          severity_impact: 35,
-          traffic_density_impact: 25,
-          overdue_penalty: 15,
-          multi_dept_synergy: 10,
+          severity_impact: 18,
+          traffic_density_impact: 14,
+          overdue_penalty: 5,
+          multi_dept_synergy: 5,
           speed_restriction_penalty: 3
         }
       } as any,

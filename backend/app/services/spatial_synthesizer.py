@@ -69,7 +69,7 @@ async def synthesize_corridor_events(
             merged_ids.append(item.request_id)
 
         # Baseline score calculation prior to ML scoring
-        base_score = min(100.0, float(max_severity * 15 + len(departments) * 12 + len(merged_ids) * 5))
+        base_score = min(100.0, float(max_severity * 8 + len(departments) * 5 + len(merged_ids) * 3))
         confidence = round(min(1.0, 0.7 + 0.1 * len(departments)), 2)
 
         # Check if an active corridor event already exists for section
