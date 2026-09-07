@@ -123,11 +123,127 @@ const mockStore = {
     { schedule_id: 6, section_id: "SEC-HWH-ASN", planned_duration_min: 240, actual_duration_min: 252, speed_recovery_score: 91.5 },
     { schedule_id: 7, section_id: "SEC-MAS-SBC", planned_duration_min: 120, actual_duration_min: 118, speed_recovery_score: 99.1 },
     { schedule_id: 8, section_id: "SEC-NDLS-AGC", planned_duration_min: 180, actual_duration_min: 184, speed_recovery_score: 95.4 }
+  ],
+  bdmsRequests: [
+    {
+      block_id: "BLK-2026-0891",
+      corridor: "New Delhi - Kanpur Central (NCR/PRYJ)",
+      section_id: "SEC-NDLS-CNB",
+      start_station: "NDLS",
+      end_station: "CNB",
+      start_time: "2026-09-08T02:00:00.000Z",
+      end_time: "2026-09-08T05:00:00.000Z",
+      departments_involved: ["TMS (Track)", "SMMS (Signal)", "TDMS (Electrical)"],
+      maintenance_tasks: ["TRT Rail Renewal", "Axle Counter Calibration", "OHE Contact Wire Straining"],
+      priority: "Critical",
+      priority_score: 92.5,
+      risk_score: 18.2,
+      conflict_score: 88.5,
+      reason_for_maintenance: "High-density Rajdhani corridor track geometry flaw combined with 3-department overdue shadow block window.",
+      approval_status: "under_review",
+      submitted_at: "2026-09-07T22:30:00.000Z",
+      gateway_response_at: "2026-09-07T22:35:00.000Z",
+      notes: "PROTOTYPE — Simulated BDMS Gateway auto-scoring engine evaluated priority 92.5/100."
+    },
+    {
+      block_id: "BLK-2026-0892",
+      corridor: "Mumbai Central - Pune Junction (CR/BB)",
+      section_id: "SEC-BCT-PUNE",
+      start_station: "MMCT",
+      end_station: "PUNE",
+      start_time: "2026-09-08T01:00:00.000Z",
+      end_time: "2026-09-08T04:00:00.000Z",
+      departments_involved: ["TMS (Track)", "TDMS (Electrical)"],
+      maintenance_tasks: ["Ghat Section Rail Grinding", "OHE Cantilever Insulator Replacement"],
+      priority: "High",
+      priority_score: 85.0,
+      risk_score: 22.4,
+      conflict_score: 88.0,
+      reason_for_maintenance: "Bhor Ghat gradient section heavy rail wear and traction wire inspection.",
+      approval_status: "approved",
+      submitted_at: "2026-09-07T21:15:00.000Z",
+      gateway_response_at: "2026-09-07T21:20:00.000Z",
+      notes: "PROTOTYPE — Approved by Division Control Office for 01:00 AM execution."
+    },
+    {
+      block_id: "BLK-2026-0893",
+      corridor: "Prayagraj - Pt. Deen Dayal Upadhyaya (NCR/PRYJ)",
+      section_id: "SEC-ALD-DDU",
+      start_station: "PRYJ",
+      end_station: "DDU",
+      start_time: "2026-09-09T03:00:00.000Z",
+      end_time: "2026-09-09T06:00:00.000Z",
+      departments_involved: ["SMMS (Signal)"],
+      maintenance_tasks: ["Point Machine Interlocking Overhaul"],
+      priority: "Medium",
+      priority_score: 64.0,
+      risk_score: 12.0,
+      conflict_score: 64.0,
+      reason_for_maintenance: "Routine 90-day signal interlocking check at Mirzapur yard.",
+      approval_status: "pending",
+      submitted_at: "2026-09-07T23:00:00.000Z",
+      notes: "PROTOTYPE — Pending Divisional Operations Manager (DOM) sign-off."
+    },
+    {
+      block_id: "BLK-2026-0894",
+      corridor: "Howrah - Asansol Corridor (ER/HWH)",
+      section_id: "SEC-HWH-ASN",
+      start_station: "HWH",
+      end_station: "ASN",
+      start_time: "2026-09-10T02:30:00.000Z",
+      end_time: "2026-09-10T05:30:00.000Z",
+      departments_involved: ["SMMS (Signal)"],
+      maintenance_tasks: ["Automatic Block Signal Testing"],
+      priority: "Low",
+      priority_score: 32.0,
+      risk_score: 8.5,
+      conflict_score: 32.0,
+      reason_for_maintenance: "Durgapur suburban section signaling check during low traffic window.",
+      approval_status: "executed",
+      submitted_at: "2026-09-07T18:00:00.000Z",
+      gateway_response_at: "2026-09-07T18:10:00.000Z",
+      notes: "PROTOTYPE — Completed execution logged to Closed-Loop Engine."
+    }
   ]
 };
 
 function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {}): StandardResponse<T> {
   const method = (options.method || 'GET').toUpperCase();
+
+  if (endpoint.includes('/bdms/gateway/requests')) {
+    if (method === 'PATCH' && endpoint.includes('/approve')) {
+      const parts = endpoint.split('/');
+      const blockId = parts[parts.indexOf('requests') + 1];
+      mockStore.bdmsRequests = mockStore.bdmsRequests.map((r) =>
+        r.block_id === blockId ? { ...r, approval_status: 'approved', gateway_response_at: new Date().toISOString() } : r
+      );
+      return { data: { status: 'success', message: `Block ${blockId} approved.` } as any, meta: { status: 'mock_fallback' } };
+    }
+    if (method === 'PATCH' && endpoint.includes('/reject')) {
+      const parts = endpoint.split('/');
+      const blockId = parts[parts.indexOf('requests') + 1];
+      mockStore.bdmsRequests = mockStore.bdmsRequests.map((r) =>
+        r.block_id === blockId ? { ...r, approval_status: 'rejected', gateway_response_at: new Date().toISOString() } : r
+      );
+      return { data: { status: 'success', message: `Block ${blockId} rejected.` } as any, meta: { status: 'mock_fallback' } };
+    }
+    return {
+      data: mockStore.bdmsRequests as any,
+      meta: { total: mockStore.bdmsRequests.length, status: 'mock_fallback' }
+    };
+  }
+
+  if (endpoint.includes('/bdms/gateway/submit')) {
+    mockStore.bdmsRequests = mockStore.bdmsRequests.map((r) =>
+      r.approval_status === 'pending' || r.approval_status === 'under_review'
+        ? { ...r, approval_status: 'approved', gateway_response_at: new Date().toISOString() }
+        : r
+    );
+    return {
+      data: { status: 'success', message: 'BDMS Gateway submission processed.' } as any,
+      meta: { status: 'mock_fallback' }
+    };
+  }
 
   if (endpoint.includes('/dashboard/overview')) {
     return {
@@ -239,13 +355,16 @@ function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {})
     };
   }
 
-  if (endpoint.includes('/schedule/simulate')) {
+  if (endpoint.includes('/simulate') || endpoint.includes('/schedule/simulate')) {
     return {
       data: {
         simulation_id: 'SIM-8821',
+        risk_level: 'Low Risk (P95 < 25m)',
+        p95_delay_minutes: 18.5,
         total_delay_mins: 18,
         delay_delta_mins: -42,
         recovery_pct: 91.4,
+        recommended_adjustment: 'Fast-freight loop bypass saved 42 mins. Combined TMS rail renewal with SMMS signal check during 02:00 AM shadow block window.',
         details: 'Fast-freight loop bypass saved 42 mins'
       } as any,
       meta: { status: 'mock_fallback' }
@@ -265,13 +384,16 @@ function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {})
         status: 'success',
         model: 'GradientBoostingRegressor v2.4',
         accuracy_improvement: '+4.2%',
-        sample_count: 1284
+        sample_count: 1284,
+        previous_r2: '0.841',
+        new_r2: '0.883 (+4.2%)',
+        new_mae: '2.14 mins'
       } as any,
       meta: { status: 'mock_fallback' }
     };
   }
 
-  if (endpoint.includes('/ingestion/generate-synthetic')) {
+  if (endpoint.includes('/ingestion/generate-synthetic') || endpoint.includes('/admin/synthetic/generate')) {
     return {
       data: {
         status: 'success',
