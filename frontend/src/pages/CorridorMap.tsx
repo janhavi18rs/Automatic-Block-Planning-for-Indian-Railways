@@ -9,8 +9,14 @@ import { DIVISIONS } from '../constants/divisions';
 const MapRecenter: React.FC<{ center: [number, number]; zoom: number }> = ({ center, zoom }) => {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
+    if (map && center && center.length === 2) {
+      map.setView(center, zoom, { animate: true });
+      const timer = setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [center[0], center[1], zoom, map]);
   return null;
 };
 
@@ -75,7 +81,7 @@ export const CorridorMap: React.FC = () => {
 
       {/* Map Container */}
       <div className="flex-1 rounded-xl overflow-hidden border border-slate-800 relative z-0 shadow-2xl">
-        <MapContainer center={activeDiv.center} zoom={activeDiv.zoom} style={{ height: '100%', width: '100%' }}>
+        <MapContainer key={`${activeDiv.id}-${activeDiv.center[0]}-${activeDiv.center[1]}`} center={activeDiv.center} zoom={activeDiv.zoom} style={{ height: '100%', width: '100%' }}>
           <MapRecenter center={activeDiv.center} zoom={activeDiv.zoom} />
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

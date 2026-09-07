@@ -44,6 +44,24 @@ const mockStore = {
       affected_departments: ["TMS (Track)"],
       suggested_resolution: "Execute BCM machine deployment during 01:15 AM shadow block window.",
       criticality_score: 59.8
+    },
+    {
+      conflict_id: "CONF-2026-005",
+      section_id: "SEC-BCT-PUNE",
+      conflict_type: "Ghat Section Speed Restriction & OHE Maintenance",
+      severity: "High",
+      affected_departments: ["TMS (Track)", "TDMS (Electrical)"],
+      suggested_resolution: "Integrate Karjat-Lonavala 1-in-37 gradient rail grinding with OHE wire tensioning during 01:00 AM shadow block.",
+      criticality_score: 88.0
+    },
+    {
+      conflict_id: "CONF-2026-006",
+      section_id: "SEC-CSMT-IGP",
+      conflict_type: "Thal Ghat Signal Interlocking & Track Inspection",
+      severity: "High",
+      affected_departments: ["SMMS (Signal)", "TMS (Track)"],
+      suggested_resolution: "Combine Kasara-Igatpuri axle counter testing with rail defect ultrasound scanning during 02:00 AM window.",
+      criticality_score: 72.0
     }
   ],
   workOrders: [
@@ -275,6 +293,7 @@ function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {})
         'SEC-NDLS-CNB': { zone: 'NCR', division: 'PRYJ', start: 'NDLS', end: 'CNB', score: 78.0, depts: ['engineering', 'signal_telecom', 'electrical'] },
         'SEC-CNB-PRYJ': { zone: 'NCR', division: 'PRYJ', start: 'CNB', end: 'PRYJ', score: 45.0, depts: ['engineering', 'signal_telecom'] },
         'SEC-BCT-PUNE': { zone: 'CR', division: 'BB', start: 'BCT', end: 'PUNE', score: 88.0, depts: ['engineering', 'electrical'] },
+        'SEC-CSMT-IGP': { zone: 'CR', division: 'BB', start: 'CSMT', end: 'IGP', score: 72.0, depts: ['engineering', 'signal_telecom'] },
         'SEC-HWH-ASN': { zone: 'ER', division: 'HWH', start: 'HWH', end: 'ASN', score: 32.0, depts: ['signal_telecom'] },
         'SEC-SBC-MYS': { zone: 'SWR', division: 'SBC', start: 'SBC', end: 'MYS', score: 55.0, depts: ['engineering'] },
         'SEC-ALD-DDU': { zone: 'NCR', division: 'PRYJ', start: 'ALD', end: 'DDU', score: 64.0, depts: ['signal_telecom', 'electrical'] },
