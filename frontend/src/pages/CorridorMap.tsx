@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Polyline, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, Popup, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import { apiFetch } from '../api/client';
 import { SectionDrawer } from '../components/SectionDrawer';
 import { Map as MapIcon } from 'lucide-react';
@@ -85,31 +85,56 @@ export const CorridorMap: React.FC = () => {
 
           {allCorridors.map((c) => {
             const isSelectedDivision = activeDiv.sections.includes(c.section_id);
+            const color = getScoreColor(c.score);
+
             return (
-              <Polyline
-                key={c.section_id}
-                positions={c.coords}
-                color={getScoreColor(c.score)}
-                weight={isSelectedDivision ? 8 : 4}
-                opacity={isSelectedDivision ? 0.95 : 0.4}
-                eventHandlers={{
-                  click: () => setSelectedSectionId(c.section_id),
-                }}
-              >
-                <Popup>
-                  <div className="font-mono text-xs p-1 space-y-1">
-                    <div className="font-bold text-slate-900">{c.section_id}</div>
-                    <div className="text-slate-700">{c.name}</div>
-                    <div className="text-purple-700 font-bold">Criticality Score: {c.score}/100</div>
-                    <button
-                      onClick={() => setSelectedSectionId(c.section_id)}
-                      className="mt-1 px-2 py-1 bg-purple-600 text-white rounded text-[10px] font-bold w-full"
-                    >
-                      Open Explainability Drawer
-                    </button>
-                  </div>
-                </Popup>
-              </Polyline>
+              <React.Fragment key={c.section_id}>
+                <Polyline
+                  positions={c.coords}
+                  color={color}
+                  weight={isSelectedDivision ? 9 : 6}
+                  opacity={isSelectedDivision ? 0.98 : 0.75}
+                  eventHandlers={{
+                    click: () => setSelectedSectionId(c.section_id),
+                  }}
+                >
+                  <Popup>
+                    <div className="font-mono text-xs p-1 space-y-1">
+                      <div className="font-bold text-slate-900">{c.section_id}</div>
+                      <div className="text-slate-700">{c.name}</div>
+                      <div className="text-purple-700 font-bold">Criticality Score: {c.score}/100</div>
+                      <button
+                        onClick={() => setSelectedSectionId(c.section_id)}
+                        className="mt-1 px-2 py-1 bg-purple-600 text-white rounded text-[10px] font-bold w-full"
+                      >
+                        Open Explainability Drawer
+                      </button>
+                    </div>
+                  </Popup>
+                </Polyline>
+
+                {/* Station Node Markers along the track */}
+                {(c.stations || []).map((st, sIdx) => (
+                  <CircleMarker
+                    key={`${c.section_id}-st-${sIdx}`}
+                    center={[st.lat, st.lng]}
+                    radius={isSelectedDivision ? 6 : 4}
+                    pathOptions={{
+                      color: color,
+                      fillColor: '#0f172a',
+                      fillOpacity: 1,
+                      weight: 2,
+                    }}
+                    eventHandlers={{
+                      click: () => setSelectedSectionId(c.section_id),
+                    }}
+                  >
+                    <Tooltip permanent={isSelectedDivision} direction="top" className="font-mono text-[10px] bg-slate-900 text-slate-100 border border-slate-700 rounded px-1.5 py-0.5">
+                      {st.name}
+                    </Tooltip>
+                  </CircleMarker>
+                ))}
+              </React.Fragment>
             );
           })}
         </MapContainer>
