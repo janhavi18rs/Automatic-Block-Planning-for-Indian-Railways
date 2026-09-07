@@ -97,11 +97,14 @@ const mockStore = {
     { id: 6, horizon_type: "weekly", section_id: "SEC-HWH-ASN", planned_start: "2026-09-13T02:30:00", planned_end: "2026-09-13T05:30:00", departments: ["signal_telecom"], status: "optimized" }
   ],
   variance: [
-    { schedule_id: 1, planned_duration_min: 180, actual_duration_min: 172, speed_recovery_score: 96.5 },
-    { schedule_id: 2, planned_duration_min: 180, actual_duration_min: 195, speed_recovery_score: 89.2 },
-    { schedule_id: 3, planned_duration_min: 150, actual_duration_min: 145, speed_recovery_score: 98.0 },
-    { schedule_id: 4, planned_duration_min: 210, actual_duration_min: 205, speed_recovery_score: 94.1 },
-    { schedule_id: 5, planned_duration_min: 180, actual_duration_min: 178, speed_recovery_score: 97.8 }
+    { schedule_id: 1, section_id: "SEC-NDLS-CNB", planned_duration_min: 180, actual_duration_min: 172, speed_recovery_score: 96.5 },
+    { schedule_id: 2, section_id: "SEC-CNB-ALD", planned_duration_min: 180, actual_duration_min: 195, speed_recovery_score: 89.2 },
+    { schedule_id: 3, section_id: "SEC-ALD-DDU", planned_duration_min: 150, actual_duration_min: 145, speed_recovery_score: 98.0 },
+    { schedule_id: 4, section_id: "SEC-DDU-GAYA", planned_duration_min: 210, actual_duration_min: 205, speed_recovery_score: 94.1 },
+    { schedule_id: 5, section_id: "SEC-BCT-PUNE", planned_duration_min: 180, actual_duration_min: 178, speed_recovery_score: 97.8 },
+    { schedule_id: 6, section_id: "SEC-HWH-ASN", planned_duration_min: 240, actual_duration_min: 252, speed_recovery_score: 91.5 },
+    { schedule_id: 7, section_id: "SEC-MAS-SBC", planned_duration_min: 120, actual_duration_min: 118, speed_recovery_score: 99.1 },
+    { schedule_id: 8, section_id: "SEC-NDLS-AGC", planned_duration_min: 180, actual_duration_min: 184, speed_recovery_score: 95.4 }
   ]
 };
 
