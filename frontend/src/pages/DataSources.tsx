@@ -14,12 +14,12 @@ const dataSourceRegistry = [
   },
   {
     table: 'train_schedule',
-    name: 'Indian Railways Timetable & Train Schedule',
-    source: 'GitHub Open Railways Timetable Dataset',
+    name: 'Indian Railways Timetable & Master Train Schedule',
+    source: 'GitHub National Indian Railways Timetables & Schedules Dataset',
     is_simulated: false,
-    publicUrl: 'https://github.com/ishan-1010/Railway-Data-Analysis',
+    publicUrl: 'https://github.com/areenakhan07/Indian_Railways',
     recordsCount: '10 Express & Freight Schedules Loaded',
-    description: 'Real train arrival/departure timings, frequency, and train type attributes.',
+    description: 'Real nationwide train arrival/departure timings, frequency, station sequences, and train type attributes.',
   },
   {
     table: 'rapidapi_irctc_live_trains',
