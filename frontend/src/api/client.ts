@@ -8,6 +8,8 @@ export interface StandardResponse<T> {
 
 // In-memory mock data store for static/offline fallback execution
 const mockStore = {
+  retrainCount: 0,
+  lastR2: 0.742,
   conflicts: [
     {
       conflict_id: "CONF-2026-001",
@@ -466,15 +468,21 @@ function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {})
   }
 
   if (endpoint.includes('/feedback/retrain')) {
+    mockStore.retrainCount = (mockStore.retrainCount || 0) + 1;
+    const prevR2 = mockStore.lastR2 || 0.742;
+    const sampleCount = 220 + (mockStore.retrainCount * 25);
+    const newR2 = Math.min(0.925, Math.round((0.818 + (mockStore.retrainCount - 1) * 0.018) * 1000) / 1000);
+    const newMae = Math.max(2.15, Math.round((5.33 - (mockStore.retrainCount - 1) * 0.42) * 100) / 100);
+    mockStore.lastR2 = newR2;
+
     return {
       data: {
         status: 'success',
-        model: 'GradientBoostingRegressor v2.4',
-        accuracy_improvement: '+4.2%',
-        sample_count: 1284,
-        previous_r2: '0.841',
-        new_r2: '0.883 (+4.2%)',
-        new_mae: '2.14 mins'
+        sample_count: sampleCount,
+        previous_r2: prevR2,
+        new_r2: newR2,
+        new_mae: newMae,
+        retrained_at: new Date().toISOString()
       } as any,
       meta: { status: 'mock_fallback' }
     };
