@@ -13,6 +13,15 @@ const dataSourceRegistry = [
     description: 'Real LineString track section geometry with zone, division, and station metadata.',
   },
   {
+    table: 'rapidapi_irctc_live_trains',
+    name: 'Indian Railways RapidAPI / NTES Live Train Telemetry',
+    source: 'RapidAPI Indian Railway IRCTC API (Live NTES Feed)',
+    is_simulated: false,
+    publicUrl: 'https://rapidapi.com/IRCTCAPI/api/irctc1/playground/apiendpoint_8cdf322b-4aa5-42e2-84e5-ef76f311476a',
+    recordsCount: 'Live NTES API Integration Active',
+    description: 'Real-time train running status, delay minutes, and station passage events to back what-if simulations with live train telemetry.',
+  },
+  {
     table: 'train_schedule',
     name: 'Indian Railways FOIS Freight Operations & Timetable',
     source: 'Indian Railways FOIS Web Portal (Freight Operations Information System)',
@@ -29,15 +38,6 @@ const dataSourceRegistry = [
     publicUrl: 'https://indianrailways.gov.in/railwayboard/uploads/directorate/stat_econ/2026/INDIAN%20RAILWAYS%20YEAR%20BOOK%2C%202024-25%20ENGLISH.pdf',
     recordsCount: 'Official Railway Board Benchmark Data',
     description: 'Official Ministry of Railways Year Book statistics used to calibrate synthetic defect distributions, track failure rates, and maintenance parameters.',
-  },
-  {
-    table: 'rapidapi_irctc_live_trains',
-    name: 'Indian Railways RapidAPI / NTES Live Train Telemetry',
-    source: 'RapidAPI Indian Railway IRCTC API (Live NTES Feed)',
-    is_simulated: false,
-    publicUrl: 'https://rapidapi.com/hub',
-    recordsCount: 'Live NTES API Integration Active',
-    description: 'Real-time train running status, delay minutes, and station passage events to back what-if simulations with live train telemetry.',
   },
   {
     table: 'tms_defects',
