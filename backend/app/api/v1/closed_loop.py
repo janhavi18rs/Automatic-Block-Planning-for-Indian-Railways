@@ -517,59 +517,52 @@ async def complete_field_work_order(
 
     return StandardResponse(data=WorkOrderSchema.model_validate(wo))
 
+DIVISION_SECTION_MAP = {
+    "PRYJ": ["SEC-NDLS-CNB", "SEC-CNB-PRYJ", "SEC-ALD-DDU"],
+    "SBC": ["SEC-SBC-MYS", "SEC-SBC-MAS", "SEC-SBC-YNK"],
+    "BB": ["SEC-BCT-PUNE", "SEC-CSMT-IGP", "SEC-BB-PNVL"],
+    "HWH": ["SEC-HWH-ASN", "SEC-HWH-KGP"],
+    "DDU": ["SEC-DDU-GAYA", "SEC-DDU-PNBE"]
+}
+
 @router.get("/analytics/post-maintenance", response_model=StandardResponse[List[PostMaintenanceAnalyticsItem]])
 async def get_post_maintenance_analytics(
     section_id: Optional[str] = Query(None),
+    division: Optional[str] = Query(None),
+    horizon_type: Optional[str] = Query(None),
     date_range: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    res = await db.execute(select(AnalyticsVariance))
-    records = res.scalars().all()
+    target_div = division.upper() if division and division.upper() in DIVISION_SECTION_MAP else "PRYJ"
+    div_sections = DIVISION_SECTION_MAP[target_div]
 
-    if not records:
-        # Seed realistic analytics variance field logs
-        sch_res = await db.execute(select(Schedule))
-        schedules = sch_res.scalars().all()
+    # Return entries scaled by horizon (7-day tactical vs 30-day strategic)
+    count = 14 if horizon_type == "monthly" else 6
 
-        planned_durations = [180.0, 180.0, 210.0, 180.0, 180.0, 180.0, 180.0, 210.0, 180.0, 180.0]
-        # Stochastic operational noise offsets with sigma ~ 6.5 mins
-        noise_offsets = [-15.5, 6.2, -18.4, 8.5, 12.1, -10.8, 5.4, 15.8, -8.2, 4.5]
-
-        sections = ["SEC-NDLS-CNB", "SEC-CNB-PRYJ", "SEC-ALD-DDU", "SEC-BCT-PUNE", "SEC-SBC-MYS", "SEC-HWH-ASN", "SEC-DDU-GAYA"]
-
-        for idx, p_min in enumerate(planned_durations):
-            sch_id = schedules[idx % len(schedules)].id if schedules else (idx + 1)
-            offset = noise_offsets[idx % len(noise_offsets)]
-            a_min = round(max(30.0, p_min + offset), 1)
-            var_min = round(a_min - p_min, 1)
-            speed_score = round(max(60.0, min(99.0, 100.0 - abs(var_min) * 0.75 + (idx % 3) * 1.2)), 1)
-
-            av = AnalyticsVariance(
-                schedule_id=sch_id,
-                planned_duration_min=p_min,
-                actual_duration_min=a_min,
-                variance_min=var_min,
-                speed_recovery_score=speed_score
-            )
-            db.add(av)
-        await db.commit()
-        res = await db.execute(select(AnalyticsVariance))
-        records = res.scalars().all()
-
+    # Generate deterministic division and horizon-specific variance items
     items = []
-    sections_pool = ["SEC-NDLS-CNB", "SEC-CNB-PRYJ", "SEC-ALD-DDU", "SEC-BCT-PUNE", "SEC-SBC-MYS", "SEC-HWH-ASN"]
-    for idx, r in enumerate(records):
+    base_planned = [180.0, 180.0, 210.0, 150.0, 240.0, 180.0, 180.0, 210.0, 150.0, 180.0, 240.0, 180.0, 210.0, 180.0]
+    offsets = [-15.5, 6.2, -18.4, 8.5, 12.1, -10.8, 5.4, 15.8, -8.2, 4.5, -12.0, 9.8, -6.5, 11.2]
+
+    for i in range(count):
+        sec = div_sections[i % len(div_sections)]
+        p_min = base_planned[i % len(base_planned)]
+        var = offsets[i % len(offsets)]
+        a_min = round(max(30.0, p_min + var), 1)
+        var_min = round(a_min - p_min, 1)
+        speed_score = round(max(60.0, min(99.0, 100.0 - abs(var_min) * 0.75 + (i % 3) * 1.5)), 1)
+
         items.append(PostMaintenanceAnalyticsItem(
-            schedule_id=r.schedule_id,
-            section_id=sections_pool[idx % len(sections_pool)],
-            planned_duration_min=r.planned_duration_min,
-            actual_duration_min=r.actual_duration_min,
-            variance_min=r.variance_min,
-            speed_recovery_score=r.speed_recovery_score
+            schedule_id=101 + i,
+            section_id=sec,
+            planned_duration_min=p_min,
+            actual_duration_min=a_min,
+            variance_min=var_min,
+            speed_recovery_score=speed_score
         ))
 
-    return StandardResponse(data=items, meta={"total": len(items)})
+    return StandardResponse(data=items, meta={"total": len(items), "division": target_div, "horizon": horizon_type or "weekly"})
 
 @router.post("/feedback/retrain", response_model=StandardResponse[RetrainResponse])
 async def retrain_feedback_model(

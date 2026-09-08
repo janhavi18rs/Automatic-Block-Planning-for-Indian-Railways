@@ -420,9 +420,48 @@ function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {})
   }
 
   if (endpoint.includes('/analytics/post-maintenance')) {
+    const divSectionMap: Record<string, string[]> = {
+      PRYJ: ['SEC-NDLS-CNB', 'SEC-CNB-PRYJ', 'SEC-ALD-DDU'],
+      SBC: ['SEC-SBC-MYS', 'SEC-SBC-MAS', 'SEC-SBC-YNK'],
+      BB: ['SEC-BCT-PUNE', 'SEC-CSMT-IGP', 'SEC-BB-PNVL'],
+      HWH: ['SEC-HWH-ASN', 'SEC-HWH-KGP'],
+      DDU: ['SEC-DDU-GAYA', 'SEC-DDU-PNBE']
+    };
+
+    let targetDiv = 'PRYJ';
+    let isMonthly = false;
+
+    if (endpoint.includes('?')) {
+      const q = new URLSearchParams(endpoint.split('?')[1]);
+      if (q.get('division')) targetDiv = q.get('division')!.toUpperCase();
+      if (q.get('horizon_type') === 'monthly') isMonthly = true;
+    }
+
+    const sections = divSectionMap[targetDiv] || divSectionMap.PRYJ;
+    const count = isMonthly ? 14 : 6;
+    const basePlanned = [180, 180, 210, 150, 240, 180, 180, 210, 150, 180, 240, 180, 210, 180];
+    const offsets = [-15.5, 6.2, -18.4, 8.5, 12.1, -10.8, 5.4, 15.8, -8.2, 4.5, -12.0, 9.8, -6.5, 11.2];
+
+    const mockVariance = Array.from({ length: count }, (_, i) => {
+      const p = basePlanned[i % basePlanned.length];
+      const varVal = offsets[i % offsets.length];
+      const a = Math.max(30, Math.round((p + varVal) * 10) / 10);
+      const varMin = Math.round((a - p) * 10) / 10;
+      const score = Math.max(60, Math.min(99, Math.round((100 - Math.abs(varMin) * 0.75 + (i % 3) * 1.5) * 10) / 10));
+
+      return {
+        schedule_id: 101 + i,
+        section_id: sections[i % sections.length],
+        planned_duration_min: p,
+        actual_duration_min: a,
+        variance_min: varMin,
+        speed_recovery_score: score
+      };
+    });
+
     return {
-      data: mockStore.variance as any,
-      meta: { status: 'mock_fallback' }
+      data: mockVariance as any,
+      meta: { total: mockVariance.length, status: 'mock_fallback', division: targetDiv, horizon: isMonthly ? 'monthly' : 'weekly' }
     };
   }
 

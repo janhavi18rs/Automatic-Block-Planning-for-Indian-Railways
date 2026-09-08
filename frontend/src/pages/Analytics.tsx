@@ -1,21 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../api/client';
-import { BarChart3, RefreshCw, Cpu, TrendingUp, CheckCircle } from 'lucide-react';
+import { useOpsStore } from '../stores/opsStore';
+import { DIVISIONS } from '../constants/divisions';
+import { BarChart3, RefreshCw, Cpu, TrendingUp, CheckCircle, Layers } from 'lucide-react';
 import { 
   BarChart as ReBarChart, Bar, LineChart, Line, XAxis, YAxis, 
   Tooltip, ResponsiveContainer, CartesianGrid, Legend 
 } from 'recharts';
 
 export const Analytics: React.FC = () => {
+  const { division, horizon } = useOpsStore();
   const [loading, setLoading] = useState(true);
   const [varianceData, setVarianceData] = useState<any[]>([]);
   const [retrainResult, setRetrainResult] = useState<any>(null);
   const [isRetraining, setIsRetraining] = useState(false);
 
+  const activeDiv = DIVISIONS[division] || DIVISIONS.PRYJ;
+
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const res = await apiFetch<any[]>('/analytics/post-maintenance');
+      const res = await apiFetch<any[]>(`/analytics/post-maintenance?division=${division}&horizon_type=${horizon}`);
       setVarianceData(res.data || []);
     } catch (err) {
       console.error(err);
@@ -26,7 +31,7 @@ export const Analytics: React.FC = () => {
 
   useEffect(() => {
     fetchAnalytics();
-  }, []);
+  }, [division, horizon]);
 
   const handleTriggerRetrain = async () => {
     setIsRetraining(true);
@@ -41,7 +46,7 @@ export const Analytics: React.FC = () => {
   };
 
   const chartData = varianceData.map((d, i) => ({
-    name: `#${d.schedule_id || i + 1}`,
+    name: `${d.section_id ? d.section_id.replace('SEC-', '') : '#' + (i + 1)}`,
     Planned: d.planned_duration_min,
     Actual: d.actual_duration_min,
     RecoveryScore: d.speed_recovery_score,
@@ -57,7 +62,7 @@ export const Analytics: React.FC = () => {
             <span>Closed-Loop Variance Analytics</span>
           </h1>
           <p className="text-[11px] sm:text-xs text-slate-400 font-mono">
-            Tracks planned vs actual block durations and retrains the GradientBoosting criticality model over time.
+            Division: <span className="text-cyan-400 font-bold">{activeDiv.name} ({activeDiv.railway})</span> | Horizon: <span className="text-amber-400 font-bold">{horizon === 'monthly' ? '30-Day Strategic (14 Corridors)' : '7-Day Tactical (6 Corridors)'}</span>
           </p>
         </div>
 
