@@ -203,6 +203,45 @@ const mockStore = {
       submitted_at: "2026-09-07T18:00:00.000Z",
       gateway_response_at: "2026-09-07T18:10:00.000Z",
       notes: "PROTOTYPE — Completed execution logged to Closed-Loop Engine."
+    },
+    {
+      block_id: "BLK-2026-0895",
+      corridor: "Bengaluru City - Mysuru Junction (SWR/SBC)",
+      section_id: "SEC-SBC-MYS",
+      start_station: "SBC",
+      end_station: "MYS",
+      start_time: "2026-09-09T01:30:00.000Z",
+      end_time: "2026-09-09T04:30:00.000Z",
+      departments_involved: ["TMS (Track)", "SMMS (Signal)"],
+      maintenance_tasks: ["Ramanagara Curve Track Tamping", "Interlocking Testing"],
+      priority: "High",
+      priority_score: 74.5,
+      risk_score: 16.0,
+      conflict_score: 68.0,
+      reason_for_maintenance: "Kengeri-Ramanagara track alignment maintenance and signal testing during non-traffic window.",
+      approval_status: "under_review",
+      submitted_at: "2026-09-08T01:00:00.000Z",
+      gateway_response_at: "2026-09-08T01:05:00.000Z",
+      notes: "PROTOTYPE — Bengaluru Division shadow block window auto-generated."
+    },
+    {
+      block_id: "BLK-2026-0896",
+      corridor: "Bengaluru - Chennai Central Corridor (SWR/SBC)",
+      section_id: "SEC-SBC-MAS",
+      start_station: "SBC",
+      end_station: "MAS",
+      start_time: "2026-09-09T02:00:00.000Z",
+      end_time: "2026-09-09T05:00:00.000Z",
+      departments_involved: ["TMS (Track)", "TDMS (Electrical)", "SMMS (Signal)"],
+      maintenance_tasks: ["OHE Contact Wire Straining", "TRT Rail Renewal"],
+      priority: "Critical",
+      priority_score: 91.0,
+      risk_score: 21.0,
+      conflict_score: 85.0,
+      reason_for_maintenance: "Joint track and OHE maintenance on high-density Vande Bharat route between Bangarapet and Jolarpettai.",
+      approval_status: "pending",
+      submitted_at: "2026-09-08T02:15:00.000Z",
+      notes: "PROTOTYPE — Pending Divisional Operations Manager (DOM) sign-off."
     }
   ]
 };
@@ -227,9 +266,18 @@ function getMockFallbackResponse<T>(endpoint: string, options: RequestInit = {})
       );
       return { data: { status: 'success', message: `Block ${blockId} rejected.` } as any, meta: { status: 'mock_fallback' } };
     }
+    let results = mockStore.bdmsRequests;
+    if (endpoint.includes('?')) {
+      const queryStr = endpoint.split('?')[1];
+      const searchParams = new URLSearchParams(queryStr);
+      const statusParam = searchParams.get('status');
+      if (statusParam) {
+        results = results.filter((r) => r.approval_status === statusParam);
+      }
+    }
     return {
-      data: mockStore.bdmsRequests as any,
-      meta: { total: mockStore.bdmsRequests.length, status: 'mock_fallback' }
+      data: results as any,
+      meta: { total: results.length, status: 'mock_fallback' }
     };
   }
 

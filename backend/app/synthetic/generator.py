@@ -1,5 +1,6 @@
 import datetime
 import random
+import uuid
 import os
 import yaml
 from typing import Dict, Any, List, Optional
@@ -61,7 +62,7 @@ async def generate_synthetic_data(
             for i in range(cnt):
                 sev = random.choices([1, 2, 3, 4, 5], weights=weights)[0]
                 defect = TMSDefect(
-                    defect_id=f"TMS-DEF-{sec_id}-{random.randint(1000, 9999)}",
+                    defect_id=f"TMS-DEF-{sec_id}-{uuid.uuid4().hex[:6]}",
                     section_id=sec_id,
                     defect_type=random.choice(types),
                     severity=sev,
@@ -87,7 +88,7 @@ async def generate_synthetic_data(
             for i in range(cnt):
                 sev = random.choices([1, 2, 3, 4, 5], weights=weights)[0]
                 fault = SMMSFault(
-                    fault_id=f"SMMS-FLT-{sec_id}-{random.randint(1000, 9999)}",
+                    fault_id=f"SMMS-FLT-{sec_id}-{uuid.uuid4().hex[:6]}",
                     section_id=sec_id,
                     fault_type=random.choice(types),
                     severity=sev,
@@ -111,7 +112,7 @@ async def generate_synthetic_data(
             for i in range(cnt):
                 sev = random.choices([1, 2, 3, 4, 5], weights=weights)[0]
                 fault = TDMSFault(
-                    fault_id=f"TDMS-FLT-{sec_id}-{random.randint(1000, 9999)}",
+                    fault_id=f"TDMS-FLT-{sec_id}-{uuid.uuid4().hex[:6]}",
                     section_id=sec_id,
                     fault_type=random.choice(types),
                     severity=sev,
@@ -138,7 +139,7 @@ async def generate_synthetic_data(
                 win_end = win_start + datetime.timedelta(hours=duration)
                 
                 req = BDMSRequest(
-                    request_id=f"BDMS-REQ-{sec_id}-{random.randint(1000, 9999)}",
+                    request_id=f"BDMS-REQ-{sec_id}-{uuid.uuid4().hex[:6]}",
                     department=random.choice(depts),
                     section_id=sec_id,
                     requested_window_start=win_start,

@@ -16,14 +16,16 @@ interface GanttTimelineProps {
   schedules: ScheduleItem[];
   horizon: 'monthly' | 'weekly';
   onScheduleUpdated: () => void;
+  highlightPulse?: 'purple' | 'amber' | null;
 }
 
-export const GanttTimeline: React.FC<GanttTimelineProps> = ({ schedules, horizon, onScheduleUpdated }) => {
+export const GanttTimeline: React.FC<GanttTimelineProps> = ({ schedules, horizon, onScheduleUpdated, highlightPulse }) => {
   const [selectedSlot, setSelectedSlot] = useState<ScheduleItem | null>(null);
   const [isOverriding, setIsOverriding] = useState(false);
   const [newStart, setNewStart] = useState('');
   const [newEnd, setNewEnd] = useState('');
   const [reason, setReason] = useState('Optimized crew window realignment');
+  const [overrideNotice, setOverrideNotice] = useState<string | null>(null);
 
   // Distinct list of sections
   const trackSections = Array.from(new Set(schedules.map((s) => s.section_id)));
@@ -37,8 +39,11 @@ export const GanttTimeline: React.FC<GanttTimelineProps> = ({ schedules, horizon
     : ['Mon 02:00', 'Tue 02:00', 'Wed 02:00', 'Thu 02:00', 'Fri 02:00', 'Sat 02:00', 'Sun 02:00'];
 
   const getDeptColorClass = (depts: string[], status: string) => {
-    if (status === 'shadow_blocked' || depts.length > 1) {
-      return 'bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-blue-500/20 border-amber-500/80 text-amber-200';
+    if (highlightPulse === 'purple') {
+      return 'bg-purple-950/90 border-purple-400 ring-2 ring-purple-500/80 shadow-lg shadow-purple-500/40 text-purple-100 animate-pulse';
+    }
+    if (highlightPulse === 'amber' || status === 'shadow_blocked' || depts.length > 1) {
+      return 'bg-gradient-to-r from-amber-950/90 via-purple-950/90 to-blue-950/90 border-amber-400 ring-2 ring-amber-500/80 shadow-lg shadow-amber-500/40 text-amber-100 animate-pulse';
     }
     if (depts.includes('engineering')) return 'bg-blue-950/80 border-blue-500/70 text-blue-200';
     if (depts.includes('signal_telecom')) return 'bg-purple-950/80 border-purple-500/70 text-purple-200';
@@ -54,8 +59,10 @@ export const GanttTimeline: React.FC<GanttTimelineProps> = ({ schedules, horizon
   const handleApplyOverride = async () => {
     if (!selectedSlot) return;
     setIsOverriding(true);
+    const slotId = selectedSlot.id;
+    const secId = selectedSlot.section_id;
     try {
-      await apiFetch(`/schedule/slots/${selectedSlot.id}/override`, {
+      await apiFetch(`/schedule/slots/${slotId}/override`, {
         method: 'PATCH',
         body: JSON.stringify({
           new_start: new Date(newStart).toISOString(),
@@ -64,6 +71,7 @@ export const GanttTimeline: React.FC<GanttTimelineProps> = ({ schedules, horizon
         }),
       });
       setSelectedSlot(null);
+      setOverrideNotice(`Slot #${slotId} on ${secId} successfully re-aligned to ${newStart ? newStart.replace('T', ' ') : '07:30'} - ${newEnd ? newEnd.replace('T', ' ') : '10:30'}. Schedule matrix updated.`);
       onScheduleUpdated();
     } catch (err) {
       alert('Failed to override slot: ' + (err as Error).message);
@@ -86,6 +94,20 @@ export const GanttTimeline: React.FC<GanttTimelineProps> = ({ schedules, horizon
           </p>
         </div>
 
+        {/* Dynamic Action Visual Status Tag */}
+        {highlightPulse && (
+          <div className={`px-3 py-1 rounded-full text-xs font-mono font-bold flex items-center space-x-1.5 animate-bounce ${
+            highlightPulse === 'purple'
+              ? 'bg-purple-500/20 border border-purple-400 text-purple-300'
+              : 'bg-amber-500/20 border border-amber-400 text-amber-300'
+          }`}>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>
+              {highlightPulse === 'purple' ? 'CP-SAT SOLVER ACTIVE — SCREEN HIGHLIGHTED' : 'SHADOW BLOCKING ACTIVE — MULTI-DEPT MERGED'}
+            </span>
+          </div>
+        )}
+
         {/* Legend */}
         <div className="flex items-center space-x-3 text-xs font-mono">
           <div className="flex items-center space-x-1.5">
@@ -106,6 +128,19 @@ export const GanttTimeline: React.FC<GanttTimelineProps> = ({ schedules, horizon
           </div>
         </div>
       </div>
+
+      {/* Override Success Banner */}
+      {overrideNotice && (
+        <div className="p-3 bg-emerald-950/80 border border-emerald-500/60 rounded-xl text-emerald-200 font-mono text-xs flex items-center justify-between shadow-lg animate-fade-in">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{overrideNotice}</span>
+          </div>
+          <button onClick={() => setOverrideNotice(null)} className="text-slate-400 hover:text-white text-xs">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* SVG / Canvas Timeline Grid */}
       <div className="overflow-x-auto">
@@ -153,7 +188,7 @@ export const GanttTimeline: React.FC<GanttTimelineProps> = ({ schedules, horizon
                       <div
                         key={slotIdx}
                         onClick={() => handleOpenOverride(matchedSlot)}
-                        className={`h-12 rounded-lg border p-2 cursor-pointer transition-all hover:scale-[1.03] hover:shadow-xl flex flex-col justify-between ${getDeptColorClass(
+                        className={`h-12 rounded-lg border p-2 cursor-pointer transition-all hover:scale-[1.05] hover:shadow-2xl flex flex-col justify-between ${getDeptColorClass(
                           matchedSlot.departments,
                           matchedSlot.status
                         )}`}
@@ -161,11 +196,20 @@ export const GanttTimeline: React.FC<GanttTimelineProps> = ({ schedules, horizon
                       >
                         <div className="flex items-center justify-between text-[10px] font-mono font-bold">
                           <span className="truncate max-w-[80px]">
-                            {isShadow ? 'MULTI-DEPT' : matchedSlot.departments[0]?.toUpperCase()}
+                            {highlightPulse === 'purple'
+                              ? 'CP-SAT'
+                              : isShadow || highlightPulse === 'amber'
+                              ? 'MULTI-DEPT'
+                              : matchedSlot.departments[0]?.toUpperCase()}
                           </span>
-                          {isShadow && (
+                          {(isShadow || highlightPulse === 'amber') && (
                             <span className="px-1 py-0.2 bg-amber-400 text-slate-950 text-[8px] rounded font-black tracking-tighter shrink-0">
                               SHADOW
+                            </span>
+                          )}
+                          {highlightPulse === 'purple' && !isShadow && (
+                            <span className="px-1 py-0.2 bg-purple-400 text-slate-950 text-[8px] rounded font-black tracking-tighter shrink-0">
+                              OPTIMAL
                             </span>
                           )}
                         </div>

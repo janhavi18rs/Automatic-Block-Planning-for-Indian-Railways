@@ -6,7 +6,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.database import init_db, AsyncSessionLocal
 from app.core.security import get_password_hash
-from app.models.models import User
+from app.models.models import User, TMSDefect
 from app.synthetic.geo_loader import load_track_sections_from_geojson
 from app.synthetic.timetable_loader import load_train_schedules
 from app.synthetic.generator import generate_synthetic_data
@@ -92,10 +92,11 @@ async def on_startup():
         await load_train_schedules(db)
         
         # Check defects
-        defects_res = await db.execute(select(User))
-        # Generate initial synthetic data
-        await generate_synthetic_data(db)
-        await synthesize_corridor_events(db)
+        defects_res = await db.execute(select(TMSDefect))
+        defects = defects_res.scalars().all()
+        if not defects:
+            await generate_synthetic_data(db)
+            await synthesize_corridor_events(db)
         await compute_criticality_scores(db)
         await optimize_maintenance_schedule(db, horizon_type="weekly")
         await execute_shadow_blocking(db)

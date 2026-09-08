@@ -180,10 +180,10 @@ export const DIVISIONS: Record<string, DivisionConfig> = {
     name: 'Bengaluru',
     railway: 'SWR',
     bbox: 'SWR / SBC',
-    corridorName: 'Bengaluru - Mysuru Main Line',
+    corridorName: 'Bengaluru - Mysuru & Chennai Corridors',
     center: [12.6, 77.1],
     zoom: 9,
-    sections: ['SEC-SBC-MYS'],
+    sections: ['SEC-SBC-MYS', 'SEC-SBC-MAS'],
     corridors: [
       {
         section_id: 'SEC-SBC-MYS',
@@ -208,6 +208,25 @@ export const DIVISIONS: Record<string, DivisionConfig> = {
           [12.5239, 76.8972],
           [12.4239, 76.6923],
           [12.2958, 76.6394],
+        ],
+      },
+      {
+        section_id: 'SEC-SBC-MAS',
+        name: 'Bengaluru - Chennai Central Corridor (SWR/SBC)',
+        score: 62,
+        stations: [
+          { name: 'Bengaluru City (SBC)', lat: 12.9716, lng: 77.5946 },
+          { name: 'Bangarapet (BWT)', lat: 12.9800, lng: 78.1300 },
+          { name: 'Jolarpettai (JTJ)', lat: 12.5600, lng: 78.5800 },
+          { name: 'Katpadi (KPD)', lat: 12.9200, lng: 79.1300 },
+          { name: 'Chennai Central (MAS)', lat: 13.0800, lng: 80.2700 },
+        ],
+        coords: [
+          [12.9716, 77.5946],
+          [12.9800, 78.1300],
+          [12.5600, 78.5800],
+          [12.9200, 79.1300],
+          [13.0800, 80.2700],
         ],
       },
     ],

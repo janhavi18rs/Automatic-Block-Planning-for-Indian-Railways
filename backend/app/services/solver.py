@@ -34,6 +34,11 @@ async def optimize_maintenance_schedule(
     horizon_days = 30 if horizon_type == "monthly" else 7
     base_start = now.replace(minute=0, second=0, microsecond=0)
 
+    # Delete previous un-consolidated schedules to prevent duplicate accumulation
+    from sqlalchemy import delete
+    await db.execute(delete(Schedule))
+    await db.commit()
+
     generated_schedules = []
 
     for sec_id in sections:

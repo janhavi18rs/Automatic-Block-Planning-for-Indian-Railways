@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../api/client';
+import { useOpsStore } from '../stores/opsStore';
+import { DIVISIONS } from '../constants/divisions';
 import {
   FileText, CheckCircle2, XCircle, Clock, AlertTriangle,
   RefreshCw, Send, Zap, Building2, ChevronDown, ChevronUp, Info
@@ -88,6 +90,7 @@ function WorkflowStepper({ status }: { status: BDMSStatus }) {
 }
 
 export const BDMSWorkflow: React.FC = () => {
+  const { division } = useOpsStore();
   const [requests, setRequests] = useState<BDMSBlockRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('');
@@ -96,14 +99,13 @@ export const BDMSWorkflow: React.FC = () => {
   const [actionMsg, setActionMsg] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  const activeDiv = DIVISIONS[division] || DIVISIONS.PRYJ;
+
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filterStatus) params.append('status', filterStatus);
-      const res = await apiFetch<BDMSBlockRequest[]>(`/bdms/gateway/requests?${params.toString()}`);
+      const res = await apiFetch<BDMSBlockRequest[]>('/bdms/gateway/requests');
       let data = res.data || [];
-      if (filterPriority) data = data.filter((r) => r.priority === filterPriority);
       setRequests(data);
     } catch (err) {
       console.error(err);
@@ -112,7 +114,19 @@ export const BDMSWorkflow: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchRequests(); }, [filterStatus, filterPriority]);
+  useEffect(() => { fetchRequests(); }, [division]);
+
+  // Division specific requests
+  const divisionRequests = requests.filter((r) =>
+    activeDiv.sections.length === 0 || activeDiv.sections.includes(r.section_id)
+  );
+
+  // Filtered requests according to UI filter selections
+  const filteredRequests = divisionRequests.filter((r) => {
+    if (filterStatus && r.approval_status !== filterStatus) return false;
+    if (filterPriority && r.priority !== filterPriority) return false;
+    return true;
+  });
 
   const handleApprove = async (blockId: string) => {
     setProcessingId(blockId);
@@ -154,10 +168,10 @@ export const BDMSWorkflow: React.FC = () => {
   };
 
   const counts = {
-    pending: requests.filter((r) => r.approval_status === 'pending').length,
-    under_review: requests.filter((r) => r.approval_status === 'under_review').length,
-    approved: requests.filter((r) => r.approval_status === 'approved').length,
-    rejected: requests.filter((r) => r.approval_status === 'rejected').length,
+    pending: divisionRequests.filter((r) => r.approval_status === 'pending').length,
+    under_review: divisionRequests.filter((r) => r.approval_status === 'under_review').length,
+    approved: divisionRequests.filter((r) => r.approval_status === 'approved').length,
+    rejected: divisionRequests.filter((r) => r.approval_status === 'rejected').length,
   };
 
   return (
@@ -170,7 +184,7 @@ export const BDMSWorkflow: React.FC = () => {
             <span>BDMS Block Request Workflow</span>
           </h1>
           <p className="text-xs text-slate-400 font-mono">
-            Closed-Loop BDMS Automation — Block Demand Management System (Prototype Gateway)
+            Closed-Loop BDMS Automation for <span className="text-cyan-400 font-semibold">{activeDiv.name} ({activeDiv.railway})</span> — Block Demand Management System
           </p>
           <div className="mt-1 flex items-center space-x-1.5">
             <Info className="w-3 h-3 text-amber-400" />
@@ -210,15 +224,22 @@ export const BDMSWorkflow: React.FC = () => {
       {/* Summary KPI Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Pending / Draft', count: counts.pending, color: 'text-slate-300', bar: 'bg-slate-500' },
-          { label: 'Under Review', count: counts.under_review, color: 'text-amber-400', bar: 'bg-amber-500' },
-          { label: 'Approved', count: counts.approved, color: 'text-emerald-400', bar: 'bg-emerald-500' },
-          { label: 'Rejected', count: counts.rejected, color: 'text-red-400', bar: 'bg-red-500' },
+          { key: 'pending', label: 'Pending / Draft', count: counts.pending, color: 'text-slate-300', bar: 'bg-slate-500' },
+          { key: 'under_review', label: 'Under Review', count: counts.under_review, color: 'text-amber-400', bar: 'bg-amber-500' },
+          { key: 'approved', label: 'Approved', count: counts.approved, color: 'text-emerald-400', bar: 'bg-emerald-500' },
+          { key: 'rejected', label: 'Rejected', count: counts.rejected, color: 'text-red-400', bar: 'bg-red-500' },
         ].map((s) => (
-          <div key={s.label} className="bg-[#0f172a] p-4 rounded-xl border border-slate-800 shadow-xl">
+          <div
+            key={s.label}
+            onClick={() => setFilterStatus(filterStatus === s.key ? '' : s.key)}
+            title={`Click to filter by ${s.label}`}
+            className={`bg-[#0f172a] p-4 rounded-xl border shadow-xl cursor-pointer transition-all ${
+              filterStatus === s.key ? 'border-cyan-500 ring-1 ring-cyan-500 bg-cyan-950/20' : 'border-slate-800 hover:border-slate-700'
+            }`}
+          >
             <div className={`text-2xl font-bold font-mono ${s.color}`}>{s.count}</div>
             <div className="text-xs text-slate-400 font-mono">{s.label}</div>
-            <ScoreBar value={(s.count / Math.max(requests.length, 1)) * 100} color={s.bar} />
+            <ScoreBar value={(s.count / Math.max(divisionRequests.length, 1)) * 100} color={s.bar} />
           </div>
         ))}
       </div>
@@ -254,7 +275,15 @@ export const BDMSWorkflow: React.FC = () => {
             <option value="Low">Low</option>
           </select>
         </div>
-        <span className="text-xs font-mono text-slate-500 ml-auto">{requests.length} block request(s) found</span>
+        {(filterStatus || filterPriority) && (
+          <button
+            onClick={() => { setFilterStatus(''); setFilterPriority(''); }}
+            className="text-xs font-mono text-cyan-400 hover:underline"
+          >
+            Clear filters
+          </button>
+        )}
+        <span className="text-xs font-mono text-slate-500 ml-auto">{filteredRequests.length} of {divisionRequests.length} block request(s) shown</span>
       </div>
 
       {/* Block Request Cards */}
@@ -262,13 +291,25 @@ export const BDMSWorkflow: React.FC = () => {
         <div className="p-12 text-center text-slate-500 font-mono animate-pulse bg-[#0f172a] rounded-xl border border-slate-800">
           Loading BDMS block requests from gateway...
         </div>
-      ) : requests.length === 0 ? (
-        <div className="p-12 text-center text-slate-500 font-mono bg-[#0f172a] rounded-xl border border-slate-800">
-          No block requests found. Run CP-SAT Solver and Apply Shadow Blocking first.
+      ) : filteredRequests.length === 0 ? (
+        <div className="p-12 text-center text-slate-500 font-mono bg-[#0f172a] rounded-xl border border-slate-800 space-y-3">
+          <div>
+            No block requests found matching current filter for division: <span className="text-cyan-400 font-bold">{activeDiv.name} ({activeDiv.railway})</span>.
+          </div>
+          {(filterStatus || filterPriority) && (
+            <div>
+              <button
+                onClick={() => { setFilterStatus(''); setFilterPriority(''); }}
+                className="px-3 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 text-xs font-semibold hover:bg-cyan-500/30 transition-all inline-flex items-center space-x-1.5"
+              >
+                <span>Reset Filters to View All ({divisionRequests.length}) Requests</span>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
-          {requests.map((req) => {
+          {filteredRequests.map((req) => {
             const conf = STATUS_CONFIG[req.approval_status] || STATUS_CONFIG.pending;
             const isExpanded = expandedId === req.block_id;
             const isProcessing = processingId === req.block_id;

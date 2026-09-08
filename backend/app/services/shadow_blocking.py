@@ -4,37 +4,21 @@ from typing import List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.models import (
-    Schedule, BDMSRequest, TMSDefect, SMMSFault, TDMSFault, TrackSection
+    Schedule, BDMSRequest, TMSDefect, SMMSFault, TDMSFault, TrackSection, CorridorEvent
 )
 from app.schemas.schemas import ShadowBlockResultSchema, ShadowBlockTaskItem
 
 
 async def execute_shadow_blocking(
-    db: AsyncSession, schedule_batch_id: str = "default"
+    db: AsyncSession, schedule_batch_id: str = "default", section_id: Any = None
 ) -> List[Schedule]:
     """
     USP 1 — Corridor-Level Shadow Blocking Engine:
-
-    Identifies maintenance tasks from Engineering (TMS), Signal & Telecom (SMMS),
-    and Traction Distribution (TDMS) that are on the same or nearby railway corridor
-    and determines whether they can be combined into a synchronized maintenance block.
-
-    Traditional Planning:
-        Engineering Block  → 01:00 – 03:00
-        Signal Block       → 04:00 – 05:00
-        Traction Block     → 06:00 – 07:00
-
-    AI Shadow Block:
-        Combined Block     → 01:00 – 04:00 (3 depts synchronized, 3h total)
-
-    The algorithm considers:
-    - Same railway corridor (section_id)
-    - Multi-department presence
-    - Task count and severity
-    - Available 01:00–05:00 maintenance window
-    - BDMS department requests already filed
     """
-    res = await db.execute(select(Schedule).filter(Schedule.status.in_(["draft", "shadow_blocked"])))
+    query = select(Schedule).filter(Schedule.status.in_(["draft", "shadow_blocked"]))
+    if section_id:
+        query = query.filter_by(section_id=section_id)
+    res = await db.execute(query)
     schedules = res.scalars().all()
 
     # Group schedules by section_id
@@ -90,13 +74,9 @@ async def execute_shadow_blocking(
                 max_severity = item.severity
 
         # ── Consolidation Score Calculation (0–100) ──────────────────────────
-        # Multi-dept synergy: merging 3 depts saves 2 separate block requests
         dept_synergy_score = min(40.0, (num_depts - 1) * 20.0)
-        # Severity urgency contributes to justification
         severity_score = min(25.0, max_severity * 5.0)
-        # Total task density — more tasks on same section = higher value in merging
         task_density_score = min(25.0, total_tasks * 2.5)
-        # Fixed base score for multi-dept window availability during off-peak
         base_score = 10.0
 
         consolidation_score = round(
@@ -105,40 +85,12 @@ async def execute_shadow_blocking(
         consolidation_score = min(100.0, consolidation_score)
 
         # ── Estimated Downtime Reduction ──────────────────────────────────────
-        # Traditional: N depts × individual block overhead (~1.5h each)
-        # Shadow block: 1 combined block window (3h)
-        individual_total_hours = num_depts * 2.0  # 2h average per dept block
-        shadow_block_hours = 3.0  # combined window
+        individual_total_hours = num_depts * 2.0
+        shadow_block_hours = 3.0
         time_saved_hours = max(0.0, individual_total_hours - shadow_block_hours)
         estimated_downtime_reduction_pct = round(
             (time_saved_hours / max(individual_total_hours, 1.0)) * 100.0, 1
         )
-
-        # ── Human-readable Explanation ─────────────────────────────────────────
-        dept_list = ", ".join(sorted(all_depts))
-        if num_depts >= 3:
-            explanation = (
-                f"All three departments ({dept_list}) have active maintenance requirements on "
-                f"{sec_id} ({start_station}–{end_station}). "
-                f"Traditional sequential blocking would require {num_depts} separate block windows "
-                f"consuming ~{individual_total_hours:.0f}h of corridor downtime. "
-                f"Shadow blocking merges them into a single 3-hour synchronized window "
-                f"(01:00–04:00 AM), saving ~{time_saved_hours:.1f}h and reducing disruption by "
-                f"{estimated_downtime_reduction_pct:.1f}%. "
-                f"Max defect severity: {max_severity}/5. Total tasks consolidated: {total_tasks}."
-            )
-        elif num_depts == 2:
-            explanation = (
-                f"Two departments ({dept_list}) have co-located work on {sec_id}. "
-                f"Shadow blocking merges both into a single synchronized window "
-                f"saving ~{time_saved_hours:.1f}h of corridor downtime ({estimated_downtime_reduction_pct:.1f}% reduction). "
-                f"Consolidation score: {consolidation_score}/100."
-            )
-        else:
-            explanation = (
-                f"Single-department block for {dept_list} on {sec_id}. "
-                f"No cross-dept merging possible. Consolidation score: {consolidation_score}/100."
-            )
 
         # ── Update Schedules ───────────────────────────────────────────────────
         for sch in sec_schedules:
@@ -151,6 +103,12 @@ async def execute_shadow_blocking(
         # Mark BDMS requests approved
         for r in bdms_reqs:
             r.status = "approved"
+
+        # Mark Corridor Events as shadow_blocked
+        ev_res = await db.execute(select(CorridorEvent).filter_by(section_id=sec_id))
+        events = ev_res.scalars().all()
+        for ev in events:
+            ev.status = "shadow_blocked"
 
     await db.commit()
     for s in updated_schedules:

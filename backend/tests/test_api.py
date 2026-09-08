@@ -30,7 +30,7 @@ async def async_client():
         user = User(
             email="testcontrol@corridorops.ir",
             hashed_password=get_password_hash("test1234"),
-            role="control_office",
+            role="admin",
             full_name="Test Controller"
         )
         session.add(user)
@@ -53,7 +53,7 @@ async def test_auth_login_and_me(async_client: AsyncClient):
     assert login_resp.status_code == 200
     token_data = login_resp.json()["data"]
     token = token_data["access_token"]
-    assert token_data["role"] == "control_office"
+    assert token_data["role"] == "admin"
 
     # 2. Get Me
     headers = {"Authorization": f"Bearer {token}"}

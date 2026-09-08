@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ShieldAlert, BarChart, Layers, X, Info } from 'lucide-react';
 import { apiFetch } from '../api/client';
+import { useOpsStore } from '../stores/opsStore';
+import { DIVISIONS } from '../constants/divisions';
 import { BarChart as ReBarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface SectionDrawerProps {
@@ -91,9 +93,18 @@ const SECTION_CALIBRATED_SCORES: Record<string, {
 };
 
 export const SectionDrawer: React.FC<SectionDrawerProps> = ({ sectionId, onClose }) => {
+  const { division } = useOpsStore();
   const [loading, setLoading] = useState(false);
   const [sectionData, setSectionData] = useState<any>(null);
   const [explainability, setExplainability] = useState<any>(null);
+
+  const activeDiv = DIVISIONS[division] || DIVISIONS.PRYJ;
+
+  useEffect(() => {
+    if (sectionId && activeDiv.sections.length > 0 && !activeDiv.sections.includes(sectionId)) {
+      onClose();
+    }
+  }, [division, sectionId]);
 
   useEffect(() => {
     if (!sectionId) return;

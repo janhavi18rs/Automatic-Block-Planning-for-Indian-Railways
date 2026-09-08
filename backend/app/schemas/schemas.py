@@ -266,6 +266,13 @@ class ConflictItem(BaseModel):
     affected_departments: List[str]
     proposed_resolution: str
     schedule_ids: List[int]
+    status: str = "active"  # active, shadow_blocked, resolved
+    shadow_block_id: Optional[str] = None
+    shadow_window: Optional[str] = None
+    downtime_saved_hours: Optional[float] = None
+    downtime_reduction_pct: Optional[float] = None
+    consolidation_score: Optional[float] = None
+
 
 class SlotOverrideRequest(BaseModel):
     new_start: datetime.datetime

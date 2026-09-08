@@ -41,6 +41,24 @@
     {
       "type": "Feature",
       "properties": {
+        "section_id": "SEC-ALD-DDU",
+        "zone": "NCR",
+        "division": "PRYJ",
+        "start_station": "ALD",
+        "end_station": "DDU"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [81.8344, 25.4358],
+          [82.5698, 25.1462],
+          [83.0080, 25.2820]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "section_id": "SEC-BCT-PUNE",
         "zone": "CR",
         "division": "BB",
@@ -60,6 +78,25 @@
     {
       "type": "Feature",
       "properties": {
+        "section_id": "SEC-CSMT-IGP",
+        "zone": "CR",
+        "division": "BB",
+        "start_station": "CSMT",
+        "end_station": "IGP"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [72.8356, 18.9402],
+          [72.9726, 19.1970],
+          [73.4834, 19.6385],
+          [73.5594, 19.6961]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "section_id": "SEC-HWH-ASN",
         "zone": "ER",
         "division": "HWH",
@@ -73,6 +110,25 @@
           [88.0825, 22.8963],
           [87.3119, 23.5204],
           [86.9839, 23.6889]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "section_id": "SEC-SBC-MYS",
+        "zone": "SWR",
+        "division": "SBC",
+        "start_station": "SBC",
+        "end_station": "MYS"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [77.5946, 12.9716],
+          [77.4784, 12.9081],
+          [77.2946, 12.7226],
+          [76.6394, 12.2958]
         ]
       }
     },
