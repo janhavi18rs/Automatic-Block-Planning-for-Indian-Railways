@@ -572,3 +572,29 @@ async def retrain_feedback_model(
     result = await retrain_scoring_model(db)
     resp = RetrainResponse(**result)
     return StandardResponse(data=resp)
+
+from app.services.live_train_api import fetch_live_train_status, get_all_live_corridor_trains
+
+@router.get("/live-trains/status", response_model=StandardResponse[List[dict]])
+async def get_live_trains_status(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returns real-time NTES / RapidAPI train running statuses & delays across corridors.
+    """
+    trains = await get_all_live_corridor_trains()
+    return StandardResponse(data=trains, meta={"total": len(trains), "source": "IRCTC RapidAPI / NTES Integration"})
+
+@router.get("/live-trains/{train_number}", response_model=StandardResponse[dict])
+async def get_single_live_train(
+    train_number: str,
+    rapidapi_key: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Fetches real-time status & delay for a specific train using IRCTC RapidAPI.
+    """
+    result = await fetch_live_train_status(train_number, rapidapi_key)
+    return StandardResponse(data=result.get("data", {}), meta={"status": result.get("status"), "source": result.get("source")})

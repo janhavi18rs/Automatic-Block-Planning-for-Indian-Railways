@@ -22,6 +22,15 @@ const dataSourceRegistry = [
     description: 'Real train arrival/departure timings, frequency, and train type attributes.',
   },
   {
+    table: 'rapidapi_irctc_live_trains',
+    name: 'Indian Railways RapidAPI / NTES Live Train Telemetry',
+    source: 'RapidAPI Indian Railway IRCTC API (Live NTES Feed)',
+    is_simulated: false,
+    publicUrl: 'https://rapidapi.com/hub',
+    recordsCount: 'Live NTES API Integration Active',
+    description: 'Real-time train running status, delay minutes, and station passage events to back what-if simulations with live train telemetry.',
+  },
+  {
     table: 'tms_defects',
     name: 'Track Management System (TMS) Defects',
     source: 'Statistical Synthetic Generator (Year Book Tuned)',
